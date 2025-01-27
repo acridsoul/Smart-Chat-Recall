@@ -1,0 +1,17 @@
+{
+    "manifest_version": 3,
+    "name": "Deepseek Chat Search",
+    "version": "1.0",
+    "permissions": ["storage", "scripting"],
+    "host_permissions": ["*://*.deepseek.com/*"],
+    "background": {
+      "service_worker": "background.js",
+      "type": "module"
+    },
+    "content_scripts": [
+      {
+        "matches": ["*://*.deepseek.com/*"],
+        "js": ["contentScript.js"]
+      }
+    ]
+  }
