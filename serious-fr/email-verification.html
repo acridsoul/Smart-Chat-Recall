@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Your Email - Serendale.ai</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Sriracha&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="email-verification.css">
+</head>
+<body>
+    <div class="verification-container">
+        <!-- Background texture -->
+        <div class="background-texture"></div>
+        
+        <!-- Decorative elements -->
+        <div class="decorative-stars top-right"></div>
+        <div class="decorative-stars bottom-left"></div>
+        
+        <!-- Main content -->
+        <div class="main-content">
+            <div class="content-section">
+                <!-- Icon -->
+                <div class="email-icon">
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2" fill="none"/>
+                        <polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="2" fill="none"/>
+                    </svg>
+                </div>
+                
+                <!-- Header -->
+                <div class="header">
+                    <h1>Check Your Email</h1>
+                    <p class="subtitle">We've sent a verification link to your email address</p>
+                </div>
+                
+                <!-- Email display -->
+                <div class="email-display" id="email-display">
+                    <span id="user-email">your-email@example.com</span>
+                </div>
+                
+                <!-- Instructions -->
+                <div class="instructions">
+                    <h3>Next Steps:</h3>
+                    <ol>
+                        <li>Check your email inbox (and spam folder)</li>
+                        <li>Click the verification link in the email</li>
+                        <li>Return here to log in to your account</li>
+                    </ol>
+                </div>
+                
+                <!-- Action buttons -->
+                <div class="action-buttons">
+                    <button class="primary-btn" id="login-btn">
+                        Go to Login Page
+                    </button>
+                    
+                    <button class="secondary-btn" id="resend-btn">
+                        Resend Verification Email
+                    </button>
+                </div>
+                
+                <!-- Help text -->
+                <div class="help-text">
+                    <p>Didn't receive the email? Check your spam folder or click "Resend" above.</p>
+                    <p>Need help? <a href="#" class="contact-link">Contact Support</a></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-left">
+                <span class="logo">Serendale.<span class="ai">ai</span></span>
+            </div>
+            <div class="footer-right">
+                <a href="index.html">← Back to Home</a>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module" src="email-verification.js"></script>
+</body>
+</html>

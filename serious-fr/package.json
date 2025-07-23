@@ -1,0 +1,32 @@
+{
+  "name": "serendale-ai",
+  "version": "1.0.0",
+  "description": "AI-powered chat recall service with infinite memories",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "setup": "npm install && echo 'Please update your .env file with your Supabase credentials'"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/serendale-ai/frontend"
+  },
+  "keywords": [
+    "ai",
+    "chat",
+    "memory",
+    "recall",
+    "supabase",
+    "authentication"
+  ],
+  "author": "Serendale AI",
+  "license": "MIT"
+}
