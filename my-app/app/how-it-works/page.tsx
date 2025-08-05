@@ -50,16 +50,24 @@ export default function HowItWorksPage() {
           </span>
         </div>
         
-        <div className="flex items-center border border-gray-800 px-6 py-3 rounded">
-          <div className="flex items-center space-x-2">
-            <Image
-              src={images.usFlag}
-              alt="US Flag"
-              width={20}
-              height={20}
-              className="w-5 h-5"
-            />
-            <span className="font-manrope font-extralight text-white text-[12px]">EN-US</span>
+        <div className="flex items-center space-x-4">
+          <Link href="/login" className="font-roboto text-white text-[15px] hover:text-gray-300">
+            Sign In
+          </Link>
+          <Link href="/signup" className="bg-[#3549cb] px-6 py-2 rounded font-roboto text-white text-[15px] hover:bg-blue-700 transition-colors">
+            Get Started
+          </Link>
+          <div className="flex items-center border border-gray-800 px-6 py-3 rounded">
+            <div className="flex items-center space-x-2">
+              <Image
+                src={images.usFlag}
+                alt="US Flag"
+                width={20}
+                height={20}
+                className="w-5 h-5"
+              />
+              <span className="font-manrope font-extralight text-white text-[12px]">EN-US</span>
+            </div>
           </div>
         </div>
       </nav>

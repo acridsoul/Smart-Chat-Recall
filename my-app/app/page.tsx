@@ -50,24 +50,32 @@ export default function LitcollectiveHome() {
           </span>
         </div>
         
-        <div className="flex items-center border border-gray-800 px-6 py-3 rounded">
-          <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-4">
+          <Link href="/login" className="font-roboto text-white text-[15px] hover:text-gray-300">
+            Sign In
+          </Link>
+          <Link href="/signup" className="bg-[#3549cb] px-6 py-2 rounded font-roboto text-white text-[15px] hover:bg-blue-700 transition-colors">
+            Get Started
+          </Link>
+          <div className="flex items-center border border-gray-800 px-6 py-3 rounded">
+            <div className="flex items-center space-x-2">
+              <Image
+                src={images.usFlag}
+                alt="US Flag"
+                width={20}
+                height={20}
+                className="w-5 h-5"
+              />
+              <span className="font-manrope font-extralight text-white text-[12px]">EN-US</span>
+            </div>
             <Image
-              src={images.usFlag}
-              alt="US Flag"
-              width={20}
-              height={20}
-              className="w-5 h-5"
+              src={icons.dropdownFrame}
+              alt="Dropdown"
+              width={16}
+              height={16}
+              className="ml-3 w-4 h-4"
             />
-            <span className="font-manrope font-extralight text-white text-[12px]">EN-US</span>
           </div>
-          <Image
-            src={icons.dropdownFrame}
-            alt="Dropdown"
-            width={16}
-            height={16}
-            className="ml-3 w-4 h-4"
-          />
         </div>
       </nav>
 
@@ -79,17 +87,17 @@ export default function LitcollectiveHome() {
           </div>
           
           <div className="absolute flex gap-[60px] items-start justify-start left-0 top-[354px]">
-            <button className="h-[58px] relative w-[184.781px] border border-white flex items-center justify-center group hover:bg-white hover:text-black transition-colors">
+            <Link href="/signup" className="h-[58px] relative w-[184.781px] border border-white flex items-center justify-center group hover:bg-white hover:text-black transition-colors">
               <span className="font-manrope font-extralight text-white text-[16px] group-hover:text-black">
                 Get Started
               </span>
-            </button>
+            </Link>
             
-            <button className="border border-white flex items-center justify-center px-[22px] py-[17px] hover:bg-white hover:text-black transition-colors group">
+            <Link href="/login" className="border border-white flex items-center justify-center px-[22px] py-[17px] hover:bg-white hover:text-black transition-colors group">
               <span className="font-manrope font-extralight text-white text-[16px] group-hover:text-black">
                 Login
               </span>
-            </button>
+            </Link>
           </div>
         </div>
       </section>
