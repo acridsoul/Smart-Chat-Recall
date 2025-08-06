@@ -9,7 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "@supabase/supabase-js": "^2.53.0",
+    "date-fns": "^4.1.0",
     "next": "15.4.6",
     "react": "19.1.0",
     "react-dom": "19.1.0"
