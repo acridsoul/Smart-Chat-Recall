@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { AuthForm } from '@/components/AuthForm';
 import { Input } from '@/components/Input';
 import { Button } from '@/components/Button';
+import OAuthButtons from '@/components/OAuthButtons';
 import { useAuth } from '@/contexts/AuthContext';
 import { validateSignupForm, getPasswordStrength } from '@/lib/validation';
 import { FormErrors, SignupData } from '@/lib/types';
@@ -200,6 +201,8 @@ export default function SignupPage() {
       >
         Create Account
       </Button>
+
+      <OAuthButtons mode="signup" />
 
       <div className="text-center">
         <p className="font-roboto text-gray-400">

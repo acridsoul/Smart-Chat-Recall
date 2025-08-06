@@ -12,6 +12,7 @@ let mockUsers: User[] = [
     name: 'Demo User',
     email: 'demo@veritas-x.com',
     createdAt: new Date().toISOString(),
+    provider: 'email',
   }
 ];
 
@@ -39,6 +40,38 @@ export const authService = {
     return { user, token };
   },
 
+  // OAuth Login function
+  async oauthLogin(provider: 'google' | 'github'): Promise<{ user: User; token: string }> {
+    await delay(1500); // Simulate OAuth flow delay
+    
+    // Mock OAuth user data based on provider
+    const oauthUser: User = {
+      id: `${provider}-${Date.now()}`,
+      name: provider === 'google' ? 'Google User' : 'GitHub User',
+      email: `user@${provider === 'google' ? 'gmail.com' : 'github.com'}`,
+      createdAt: new Date().toISOString(),
+      provider: provider,
+      avatar: provider === 'google' 
+        ? 'https://www.google.com/favicon.ico'
+        : 'https://github.com/favicon.ico'
+    };
+    
+    // Check if user exists, if not create them
+    let existingUser = mockUsers.find(u => u.email === oauthUser.email);
+    if (!existingUser) {
+      mockUsers.push(oauthUser);
+      existingUser = oauthUser;
+    } else {
+      // Update provider info if user logs in with different method
+      existingUser.provider = provider;
+      existingUser.avatar = oauthUser.avatar;
+    }
+    
+    const token = `mock-jwt-token-${existingUser.id}-${Date.now()}`;
+    
+    return { user: existingUser, token };
+  },
+
   // Signup function
   async signup(data: SignupData): Promise<{ user: User; token: string }> {
     await delay(1000); // Simulate API delay
@@ -55,6 +88,7 @@ export const authService = {
       name: data.name,
       email: data.email,
       createdAt: new Date().toISOString(),
+      provider: 'email',
     };
     
     mockUsers.push(newUser);

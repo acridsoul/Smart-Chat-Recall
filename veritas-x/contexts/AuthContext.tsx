@@ -7,6 +7,7 @@ import { authService } from '@/lib/auth';
 interface AuthContextType extends AuthState {
   login: (data: LoginData) => Promise<void>;
   signup: (data: SignupData) => Promise<void>;
+  oauthLogin: (provider: 'google' | 'github') => Promise<void>;
   logout: () => void;
   clearError: () => void;
 }
@@ -118,6 +119,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const oauthLogin = async (provider: 'google' | 'github') => {
+    dispatch({ type: 'SET_LOADING', payload: true });
+    dispatch({ type: 'CLEAR_ERROR' });
+    
+    try {
+      const { user, token } = await authService.oauthLogin(provider);
+      authService.storeAuthData(user, token);
+      dispatch({ type: 'LOGIN_SUCCESS', payload: user });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : `${provider} login failed`;
+      dispatch({ type: 'SET_ERROR', payload: message });
+    }
+  };
+
   const logout = () => {
     authService.logout();
     dispatch({ type: 'LOGOUT' });
@@ -131,6 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     ...state,
     login,
     signup,
+    oauthLogin,
     logout,
     clearError,
   };

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { AuthForm } from '@/components/AuthForm';
 import { Input } from '@/components/Input';
 import { Button } from '@/components/Button';
+import OAuthButtons from '@/components/OAuthButtons';
 import { useAuth } from '@/contexts/AuthContext';
 import { validateLoginForm } from '@/lib/validation';
 import { FormErrors, LoginData } from '@/lib/types';
@@ -148,6 +149,8 @@ export default function LoginPage() {
       >
         Sign In
       </Button>
+
+      <OAuthButtons mode="login" />
 
       <div className="text-center">
         <p className="font-roboto text-gray-400">

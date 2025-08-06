@@ -3,6 +3,8 @@ export interface User {
   name: string;
   email: string;
   createdAt: string;
+  provider?: 'email' | 'google' | 'github';
+  avatar?: string;
 }
 
 export interface AuthState {
