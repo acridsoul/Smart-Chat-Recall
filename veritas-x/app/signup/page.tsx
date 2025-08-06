@@ -7,13 +7,14 @@ import { AuthForm } from '@/components/AuthForm';
 import { Input } from '@/components/Input';
 import { Button } from '@/components/Button';
 import OAuthButtons from '@/components/OAuthButtons';
+import { EmailConfirmationModal } from '@/components/EmailConfirmationModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { validateSignupForm, getPasswordStrength } from '@/lib/validation';
 import { FormErrors, SignupData } from '@/lib/types';
 
 export default function SignupPage() {
   const router = useRouter();
-  const { signup, isLoading, error, clearError, isAuthenticated } = useAuth();
+  const { signup, isLoading, error, clearError, isAuthenticated, resendConfirmation } = useAuth();
   
   const [formData, setFormData] = useState<SignupData>({
     name: '',
@@ -25,6 +26,9 @@ export default function SignupPage() {
   
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [passwordStrength, setPasswordStrength] = useState({ score: 0, text: '', color: '' });
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [confirmationEmail, setConfirmationEmail] = useState('');
+  const [isResendingEmail, setIsResendingEmail] = useState(false);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -75,20 +79,46 @@ export default function SignupPage() {
     }
 
     try {
-      await signup(formData);
-      // Redirect will happen automatically via useEffect
+      const result = await signup(formData);
+      
+      // Check if email confirmation is needed
+      if (result.needsConfirmation && result.email) {
+        setConfirmationEmail(result.email);
+        setShowConfirmationModal(true);
+      }
+      // If no confirmation needed, the AuthContext will handle the redirect
     } catch (err) {
       // Error handling is done in the auth context
     }
   };
 
+  const handleResendEmail = async () => {
+    if (!confirmationEmail) return;
+    
+    setIsResendingEmail(true);
+    try {
+      await resendConfirmation(confirmationEmail);
+    } catch (error) {
+      console.error('Failed to resend confirmation email:', error);
+    } finally {
+      setIsResendingEmail(false);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowConfirmationModal(false);
+    // Redirect to login page after closing modal
+    router.push('/login');
+  };
+
   return (
-    <AuthForm
-      title="Create Account"
-      subtitle="Join us and start your journey"
-      onSubmit={handleSubmit}
-      isLoading={isLoading}
-    >
+    <>
+      <AuthForm
+        title="Create Account"
+        subtitle="Join us and start your journey"
+        onSubmit={handleSubmit}
+        isLoading={isLoading}
+      >
       <Input
         type="text"
         name="name"
@@ -224,6 +254,15 @@ export default function SignupPage() {
           ← Back to home
         </Link>
       </div>
-    </AuthForm>
+      </AuthForm>
+
+      <EmailConfirmationModal
+        email={confirmationEmail}
+        isOpen={showConfirmationModal}
+        onClose={handleCloseModal}
+        onResendEmail={handleResendEmail}
+        isResending={isResendingEmail}
+      />
+    </>
   );
 }

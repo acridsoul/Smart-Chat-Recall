@@ -13,7 +13,7 @@ import { FormErrors, LoginData } from '@/lib/types';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isLoading, error, clearError, isAuthenticated } = useAuth();
+  const { login, isLoading, error, clearError, isAuthenticated, setError } = useAuth();
   
   const [formData, setFormData] = useState<LoginData>({
     email: '',
@@ -22,6 +22,51 @@ export default function LoginPage() {
   });
   
   const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const [successMessage, setSuccessMessage] = useState<string>('');
+
+  // Handle URL parameters for messages and errors
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const message = urlParams.get('message');
+    const errorParam = urlParams.get('error');
+    
+    if (message === 'email_confirmed') {
+      setSuccessMessage('Email confirmed successfully! You can now sign in with your credentials.');
+      // Clean URL
+      window.history.replaceState({}, '', '/login');
+    }
+    
+    if (errorParam) {
+      let errorMessage = 'An error occurred. Please try again.';
+      
+      switch (errorParam) {
+        case 'verification_failed':
+          errorMessage = 'Email verification failed. Please check your email and try clicking the confirmation link again.';
+          break;
+        case 'session_failed':
+          errorMessage = 'Failed to establish session. Please try signing in again.';
+          break;
+        case 'callback_failed':
+          errorMessage = 'Authentication callback failed. Please try signing in again.';
+          break;
+        case 'no_session':
+          errorMessage = 'No active session found. Please sign in to continue.';
+          break;
+        case 'callback_error':
+          errorMessage = 'An error occurred during authentication. Please try again.';
+          break;
+        default:
+          errorMessage = 'An authentication error occurred. Please try again.';
+      }
+      
+      // Use the auth context to set the error
+      clearError(); // Clear any existing errors first
+      setError(errorMessage);
+      
+      // Clean URL
+      window.history.replaceState({}, '', '/login');
+    }
+  }, [clearError, setError]);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -133,6 +178,17 @@ export default function LoginPage() {
           Forgot password?
         </Link>
       </div>
+
+      {successMessage && (
+        <div className="bg-green-900 border border-green-500 text-green-200 px-4 py-3 rounded">
+          <div className="flex items-center">
+            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <p className="font-roboto text-sm">{successMessage}</p>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-900 border border-red-500 text-red-200 px-4 py-3 rounded">

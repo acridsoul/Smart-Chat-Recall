@@ -12,13 +12,20 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push('/auth/login');
+      router.push('/login');
     }
   }, [isAuthenticated, isLoading, router]);
 
   const handleLogout = async () => {
-    await logout();
-    router.push('/');
+    console.log('Logout button clicked');
+    try {
+      console.log('Calling logout...');
+      await logout();
+      console.log('Logout successful, redirecting to home...');
+      router.push('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
 
   if (isLoading) {
@@ -57,13 +64,12 @@ export default function DashboardPage() {
             >
               Home
             </Link>
-            <Button
-              variant="outline"
-              size="sm"
+            <button
+              className="px-4 py-2 text-sm bg-transparent text-white border border-white hover:bg-white hover:text-black transition-colors"
               onClick={handleLogout}
             >
               Logout
-            </Button>
+            </button>
           </div>
         </div>
       </nav>

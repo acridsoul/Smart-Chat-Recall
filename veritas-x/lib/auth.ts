@@ -70,7 +70,7 @@ export const authService = {
   },
 
   // Signup function
-  async signup(data: SignupData): Promise<{ user: User; token: string }> {
+  async signup(data: SignupData): Promise<{ user: User; token: string } | { needsConfirmation: true; email: string }> {
     const { data: authData, error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
@@ -95,32 +95,34 @@ export const authService = {
     if (!authData.session) {
       // Email confirmation is required
       if (authData.user && !authData.user.email_confirmed_at) {
-        // For now, we'll create a mock user for UI purposes
-        // In a real app, you'd show a "check your email" message
-        const tempUser: User = {
-          id: authData.user.id,
-          name: data.name,
-          email: data.email,
-          avatar_url: null,
-          provider: 'email',
-          created_at: authData.user.created_at || new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        
+        // Return a special response indicating confirmation is needed
         return { 
-          user: tempUser, 
-          token: 'temp-token-awaiting-confirmation' 
+          needsConfirmation: true, 
+          email: data.email 
         };
       } else {
         throw new Error('Signup completed but no session created. Please try logging in.');
       }
     }
 
-    // Normal signup with immediate session
+    // Normal signup with immediate session (autoconfirm is ON)
     const user = await mapSupabaseUser(authData.user);
     const token = authData.session?.access_token || '';
 
     return { user, token };
+  },
+
+  // Resend confirmation email
+  async resendConfirmation(email: string): Promise<void> {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email,
+    });
+
+    if (error) {
+      console.error('Resend confirmation error:', error);
+      throw new Error(error.message);
+    }
   },
 
   // Get current session
@@ -137,9 +139,50 @@ export const authService = {
 
   // Logout function
   async logout(): Promise<void> {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      throw new Error(error.message);
+    console.log('AuthService logout called - starting signOut');
+    try {
+      // Try signOut with global scope (default behavior)
+      console.log('Calling supabase.auth.signOut()...');
+      const startTime = Date.now();
+      
+      // Set a timeout for the signOut operation
+      const signOutPromise = supabase.auth.signOut();
+      const timeoutPromise = new Promise<{ error: any }>((_, reject) => {
+        setTimeout(() => reject(new Error('SignOut timeout after 10 seconds')), 10000);
+      });
+      
+      const { error } = await Promise.race([signOutPromise, timeoutPromise]);
+      
+      const duration = Date.now() - startTime;
+      console.log(`Supabase signOut completed in ${duration}ms`, { error });
+      
+      if (error) {
+        console.error('SignOut error details:', error);
+        throw new Error(error.message);
+      }
+      console.log('AuthService logout completed successfully');
+    } catch (err) {
+      console.error('AuthService logout caught error:', err);
+      
+      // If signOut fails, try to clear local session data manually
+      console.log('Attempting to clear local session manually...');
+      try {
+        // Clear any local storage keys that might contain session data
+        if (typeof window !== 'undefined') {
+          const storageKeys = Object.keys(localStorage);
+          storageKeys.forEach(key => {
+            if (key.includes('supabase') || key.includes('sb-')) {
+              localStorage.removeItem(key);
+              console.log(`Removed localStorage key: ${key}`);
+            }
+          });
+        }
+        console.log('Local session data cleared');
+      } catch (localClearError) {
+        console.error('Failed to clear local session data:', localClearError);
+      }
+      
+      throw err;
     }
   },
 

@@ -6,10 +6,12 @@ import { authService } from '@/lib/auth';
 
 interface AuthContextType extends AuthState {
   login: (data: LoginData) => Promise<void>;
-  signup: (data: SignupData) => Promise<void>;
+  signup: (data: SignupData) => Promise<{ needsConfirmation?: boolean; email?: string }>;
   oauthLogin: (provider: 'google' | 'github') => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   clearError: () => void;
+  setError: (error: string) => void;
+  resendConfirmation: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -115,11 +117,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'CLEAR_ERROR' });
     
     try {
-      const { user } = await authService.signup(data);
-      dispatch({ type: 'LOGIN_SUCCESS', payload: user });
+      const result = await authService.signup(data);
+      
+      // Check if email confirmation is needed
+      if ('needsConfirmation' in result) {
+        dispatch({ type: 'SET_LOADING', payload: false });
+        return { needsConfirmation: true, email: result.email };
+      } else {
+        // Normal signup with immediate session
+        dispatch({ type: 'LOGIN_SUCCESS', payload: result.user });
+        return {};
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Signup failed';
       dispatch({ type: 'SET_ERROR', payload: message });
+      return {};
     }
   };
 
@@ -142,17 +154,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
+      console.log('AuthContext logout called');
       await authService.logout();
+      console.log('AuthService logout successful');
       dispatch({ type: 'LOGOUT' });
+      console.log('Logout state updated');
     } catch (error) {
       console.error('Logout error:', error);
-      // Still dispatch logout to clear local state
+      // Even if signOut fails, clear local state to ensure UI updates
+      console.log('Clearing local auth state due to logout error');
       dispatch({ type: 'LOGOUT' });
+      // Don't re-throw the error - we want to proceed with logout even if server signOut fails
     }
   };
 
   const clearError = () => {
     dispatch({ type: 'CLEAR_ERROR' });
+  };
+
+  const setError = (error: string) => {
+    dispatch({ type: 'SET_ERROR', payload: error });
+  };
+
+  const resendConfirmation = async (email: string) => {
+    dispatch({ type: 'SET_LOADING', payload: true });
+    dispatch({ type: 'CLEAR_ERROR' });
+    
+    try {
+      await authService.resendConfirmation(email);
+      dispatch({ type: 'SET_LOADING', payload: false });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to resend confirmation email';
+      dispatch({ type: 'SET_ERROR', payload: message });
+    }
   };
 
   const value: AuthContextType = {
@@ -162,6 +196,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     oauthLogin,
     logout,
     clearError,
+    setError,
+    resendConfirmation,
   };
 
   return (
