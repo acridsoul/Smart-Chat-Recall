@@ -1,159 +1,186 @@
 import { User, LoginData, SignupData } from './types';
+import { supabase } from './supabase';
 
-const AUTH_STORAGE_KEY = 'veritas-auth';
-
-// Simulate API delays
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-// Mock user database (in a real app, this would be handled by your backend)
-let mockUsers: User[] = [
-  {
-    id: '1',
-    name: 'Demo User',
-    email: 'demo@veritas-x.com',
-    createdAt: new Date().toISOString(),
-    provider: 'email',
+// Helper function to convert Supabase user to our User type
+const mapSupabaseUser = async (supabaseUser: any, profile?: any): Promise<User> => {
+  // Get profile data if not provided
+  if (!profile && supabaseUser) {
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', supabaseUser.id)
+      .single();
+    profile = profileData;
   }
-];
+
+  return {
+    id: supabaseUser.id,
+    name: profile?.name || supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0] || 'User',
+    email: supabaseUser.email,
+    avatar_url: profile?.avatar_url || supabaseUser.user_metadata?.avatar_url,
+    provider: (profile?.provider || 'email') as 'email' | 'google' | 'github',
+    created_at: profile?.created_at || supabaseUser.created_at,
+    updated_at: profile?.updated_at
+  };
+};
 
 export const authService = {
   // Login function
   async login(data: LoginData): Promise<{ user: User; token: string }> {
-    await delay(1000); // Simulate API delay
-    
-    // Find user by email
-    const user = mockUsers.find(u => u.email === data.email);
-    
-    if (!user) {
-      throw new Error('Invalid email or password');
+    const { data: authData, error } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    });
+
+    if (error) {
+      throw new Error(error.message);
     }
-    
-    // In a real app, you'd verify the password hash
-    // For demo purposes, we'll accept any password for existing users
-    // or the password "password123" for demo@veritas-x.com
-    if (data.email === 'demo@veritas-x.com' && data.password !== 'password123') {
-      throw new Error('Invalid email or password');
+
+    if (!authData.user) {
+      throw new Error('Login failed - no user returned');
     }
-    
-    const token = `mock-jwt-token-${user.id}-${Date.now()}`;
-    
+
+    const user = await mapSupabaseUser(authData.user);
+    const token = authData.session?.access_token || '';
+
     return { user, token };
   },
 
   // OAuth Login function
   async oauthLogin(provider: 'google' | 'github'): Promise<{ user: User; token: string }> {
-    await delay(1500); // Simulate OAuth flow delay
-    
-    // Mock OAuth user data based on provider
-    const oauthUser: User = {
-      id: `${provider}-${Date.now()}`,
-      name: provider === 'google' ? 'Google User' : 'GitHub User',
-      email: `user@${provider === 'google' ? 'gmail.com' : 'github.com'}`,
-      createdAt: new Date().toISOString(),
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: provider,
-      avatar: provider === 'google' 
-        ? 'https://www.google.com/favicon.ico'
-        : 'https://github.com/favicon.ico'
-    };
-    
-    // Check if user exists, if not create them
-    let existingUser = mockUsers.find(u => u.email === oauthUser.email);
-    if (!existingUser) {
-      mockUsers.push(oauthUser);
-      existingUser = oauthUser;
-    } else {
-      // Update provider info if user logs in with different method
-      existingUser.provider = provider;
-      existingUser.avatar = oauthUser.avatar;
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+      },
+    });
+
+    if (error) {
+      throw new Error(`${provider} authentication failed: ${error.message}`);
     }
-    
-    const token = `mock-jwt-token-${existingUser.id}-${Date.now()}`;
-    
-    return { user: existingUser, token };
+
+    // For OAuth, we need to handle the redirect flow
+    // The actual user data will be available after the redirect
+    // This is a placeholder - the real flow happens via redirect
+    throw new Error('OAuth redirect initiated');
   },
 
   // Signup function
   async signup(data: SignupData): Promise<{ user: User; token: string }> {
-    await delay(1000); // Simulate API delay
-    
-    // Check if user already exists
-    const existingUser = mockUsers.find(u => u.email === data.email);
-    if (existingUser) {
-      throw new Error('User with this email already exists');
-    }
-    
-    // Create new user
-    const newUser: User = {
-      id: Date.now().toString(),
-      name: data.name,
+    const { data: authData, error } = await supabase.auth.signUp({
       email: data.email,
-      createdAt: new Date().toISOString(),
-      provider: 'email',
-    };
+      password: data.password,
+      options: {
+        data: {
+          full_name: data.name,
+          name: data.name,
+        },
+      },
+    });
+
+    if (error) {
+      console.error('Signup error:', error);
+      throw new Error(error.message);
+    }
+
+    if (!authData.user) {
+      throw new Error('Signup failed - no user returned');
+    }
+
+    // Handle different signup scenarios
+    if (!authData.session) {
+      // Email confirmation is required
+      if (authData.user && !authData.user.email_confirmed_at) {
+        // For now, we'll create a mock user for UI purposes
+        // In a real app, you'd show a "check your email" message
+        const tempUser: User = {
+          id: authData.user.id,
+          name: data.name,
+          email: data.email,
+          avatar_url: null,
+          provider: 'email',
+          created_at: authData.user.created_at || new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
+        return { 
+          user: tempUser, 
+          token: 'temp-token-awaiting-confirmation' 
+        };
+      } else {
+        throw new Error('Signup completed but no session created. Please try logging in.');
+      }
+    }
+
+    // Normal signup with immediate session
+    const user = await mapSupabaseUser(authData.user);
+    const token = authData.session?.access_token || '';
+
+    return { user, token };
+  },
+
+  // Get current session
+  async getCurrentSession(): Promise<{ user: User; token: string } | null> {
+    const { data: { session } } = await supabase.auth.getSession();
     
-    mockUsers.push(newUser);
-    
-    const token = `mock-jwt-token-${newUser.id}-${Date.now()}`;
-    
-    return { user: newUser, token };
+    if (!session || !session.user) {
+      return null;
+    }
+
+    const user = await mapSupabaseUser(session.user);
+    return { user, token: session.access_token };
   },
 
   // Logout function
-  logout(): void {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-  },
-
-  // Get current user from storage
-  getCurrentUser(): User | null {
-    try {
-      const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-      if (stored) {
-        const { user } = JSON.parse(stored);
-        return user;
-      }
-    } catch (error) {
-      console.error('Error getting current user:', error);
+  async logout(): Promise<void> {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      throw new Error(error.message);
     }
-    return null;
   },
 
-  // Store auth data
+  // Get current user from session
+  async getCurrentUser(): Promise<User | null> {
+    const session = await this.getCurrentSession();
+    return session?.user || null;
+  },
+
+  // Storage functions (keeping interface compatibility)
   storeAuthData(user: User, token: string): void {
-    const authData = { user, token, timestamp: Date.now() };
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authData));
+    // Supabase handles session storage automatically
+    // This is kept for interface compatibility
   },
 
   // Check if user is authenticated
-  isAuthenticated(): boolean {
-    try {
-      const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-      if (stored) {
-        const { timestamp } = JSON.parse(stored);
-        const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
-        return Date.now() - timestamp < ONE_WEEK;
-      }
-    } catch (error) {
-      console.error('Error checking authentication:', error);
-    }
-    return false;
+  async isAuthenticated(): Promise<boolean> {
+    const session = await this.getCurrentSession();
+    return session !== null;
   },
 
-  // Verify token (mock implementation)
+  // Verify token
   async verifyToken(token: string): Promise<User | null> {
-    await delay(500);
+    const { data: { user }, error } = await supabase.auth.getUser(token);
     
-    try {
-      const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-      if (stored) {
-        const { user, token: storedToken } = JSON.parse(stored);
-        if (token === storedToken) {
-          return user;
-        }
-      }
-    } catch (error) {
-      console.error('Error verifying token:', error);
+    if (error || !user) {
+      return null;
     }
-    
-    return null;
-  }
+
+    return await mapSupabaseUser(user);
+  },
+
+  // Auth state change listener
+  onAuthStateChange(callback: (user: User | null) => void) {
+    return supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const user = await mapSupabaseUser(session.user);
+        callback(user);
+      } else {
+        callback(null);
+      }
+    });
+  },
 };

@@ -68,17 +68,13 @@ const initialState: AuthState = {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Check for existing authentication on mount
+  // Check for existing authentication on mount and set up auth listener
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       try {
-        if (authService.isAuthenticated()) {
-          const user = authService.getCurrentUser();
-          if (user) {
-            dispatch({ type: 'SET_USER', payload: user });
-          } else {
-            dispatch({ type: 'SET_LOADING', payload: false });
-          }
+        const session = await authService.getCurrentSession();
+        if (session?.user) {
+          dispatch({ type: 'SET_USER', payload: session.user });
         } else {
           dispatch({ type: 'SET_LOADING', payload: false });
         }
@@ -88,7 +84,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
+    // Set up auth state listener
+    const { data: { subscription } } = authService.onAuthStateChange((user) => {
+      dispatch({ type: 'SET_USER', payload: user });
+    });
+
     checkAuth();
+
+    // Cleanup subscription on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (data: LoginData) => {
@@ -96,8 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'CLEAR_ERROR' });
     
     try {
-      const { user, token } = await authService.login(data);
-      authService.storeAuthData(user, token);
+      const { user } = await authService.login(data);
       dispatch({ type: 'LOGIN_SUCCESS', payload: user });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Login failed';
@@ -110,8 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'CLEAR_ERROR' });
     
     try {
-      const { user, token } = await authService.signup(data);
-      authService.storeAuthData(user, token);
+      const { user } = await authService.signup(data);
       dispatch({ type: 'LOGIN_SUCCESS', payload: user });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Signup failed';
@@ -124,18 +128,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'CLEAR_ERROR' });
     
     try {
-      const { user, token } = await authService.oauthLogin(provider);
-      authService.storeAuthData(user, token);
-      dispatch({ type: 'LOGIN_SUCCESS', payload: user });
+      // OAuth will redirect, so we don't get immediate user data
+      await authService.oauthLogin(provider);
+      // The auth state change listener will handle the user update after redirect
     } catch (error) {
       const message = error instanceof Error ? error.message : `${provider} login failed`;
-      dispatch({ type: 'SET_ERROR', payload: message });
+      // Only show error if it's not the expected OAuth redirect
+      if (!message.includes('OAuth redirect initiated')) {
+        dispatch({ type: 'SET_ERROR', payload: message });
+      }
     }
   };
 
-  const logout = () => {
-    authService.logout();
-    dispatch({ type: 'LOGOUT' });
+  const logout = async () => {
+    try {
+      await authService.logout();
+      dispatch({ type: 'LOGOUT' });
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still dispatch logout to clear local state
+      dispatch({ type: 'LOGOUT' });
+    }
   };
 
   const clearError = () => {

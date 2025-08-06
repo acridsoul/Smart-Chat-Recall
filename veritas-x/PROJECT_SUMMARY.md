@@ -9,7 +9,10 @@ A modern Next.js application with complete authentication system, built with exa
 - **Language**: TypeScript with full type safety
 - **Fonts**: Google Fonts (Manrope ExtraLight, Roboto)
 - **State Management**: React Context API with useReducer
-- **Authentication**: Mock service with localStorage persistence
+- **Authentication**: Mock service with localStorage persistence *(→ Supabase Auth planned)*
+- **Backend**: *(Supabase integration planned for Phase 3)*
+- **Database**: *(Supabase PostgreSQL planned)*
+- **Storage**: *(Supabase Storage planned for file uploads)*
 
 ---
 
@@ -24,6 +27,7 @@ A modern Next.js application with complete authentication system, built with exa
 
 ### 🔐 Authentication System
 - **Complete auth flow**: Login, signup, logout, and protected routes
+- **OAuth integration**: Google and GitHub social media authentication
 - **Form validation**: Real-time validation with error handling
 - **Password security**: Strength indicator and validation rules
 - **User persistence**: localStorage-based session management
@@ -111,10 +115,45 @@ A modern Next.js application with complete authentication system, built with exa
 
 ---
 
+## Phase 2.5: Social Media Authentication
+
+### OAuth Integration
+- ✅ **Google OAuth** authentication flow
+  - Mock Google OAuth service integration
+  - Google-branded signin button with proper colors
+  - Automatic user creation and profile data
+  - Google favicon avatar integration
+  
+- ✅ **GitHub OAuth** authentication flow
+  - Mock GitHub OAuth service integration  
+  - GitHub-branded signin button with proper styling
+  - Automatic user creation and profile data
+  - GitHub favicon avatar integration
+
+### Enhanced User Model
+- ✅ **Provider tracking**: Added `provider` field ('email', 'google', 'github')
+- ✅ **Avatar support**: Added `avatar` field for OAuth profile pictures
+- ✅ **Backward compatibility**: Existing email users marked as 'email' provider
+
+### OAuth UI Components
+- ✅ **OAuthButtons component**: Reusable social signin buttons
+- ✅ **Loading states**: Individual button loading with spinners
+- ✅ **Professional design**: "Or sign in/up with" divider styling
+- ✅ **Responsive layout**: Grid layout for multiple OAuth providers
+- ✅ **Error handling**: OAuth-specific error messages
+
+### Dashboard Enhancements
+- ✅ **Provider display**: Shows signin method with branded icons
+- ✅ **Avatar integration**: Displays OAuth user avatars
+- ✅ **Provider-specific styling**: Google and GitHub branded elements
+- ✅ **Enhanced user info**: Complete OAuth user profile display
+
+---
+
 ## Demo Credentials
 For testing the authentication system:
-- **Email**: demo@example.com
-- **Password**: password123
+- **Email/Password**: demo@example.com / password123
+- **OAuth Testing**: Click Google or GitHub buttons for instant mock authentication
 
 ---
 
@@ -125,13 +164,20 @@ veritas-x/
 │   ├── page.tsx              # Landing page with Figma design
 │   ├── layout.tsx            # Root layout with fonts
 │   ├── globals.css           # Global styles
-│   ├── login/page.tsx        # Login form
-│   ├── signup/page.tsx       # Registration form
-│   └── dashboard/page.tsx    # Protected dashboard
+│   ├── login/page.tsx        # Login form with OAuth buttons
+│   ├── signup/page.tsx       # Registration form with OAuth buttons
+│   └── dashboard/page.tsx    # Protected dashboard with OAuth user info
+├── components/
+│   ├── AuthForm.tsx          # Reusable auth form wrapper
+│   ├── Input.tsx             # Custom input components
+│   ├── Button.tsx            # Custom button components
+│   └── OAuthButtons.tsx      # Social media auth buttons
 ├── contexts/
-│   └── AuthContext.tsx       # Global auth state management
+│   └── AuthContext.tsx       # Global auth state with OAuth support
 ├── lib/
-│   └── auth.ts              # Mock authentication service
+│   ├── auth.ts              # Mock auth service with OAuth methods
+│   ├── types.ts             # TypeScript interfaces with OAuth types
+│   └── validation.ts        # Form validation utilities
 ├── public/                  # Static assets (SVGs, images)
 └── [config files]          # Next.js, TypeScript, Tailwind configs
 ```
@@ -151,6 +197,8 @@ veritas-x/
 - Form input sanitization
 - Protected route mechanisms
 - Session management with localStorage
+- OAuth provider authentication
+- Multi-provider user account management
 
 ### 🚀 Performance Optimizations
 - Next.js 15 with Turbopack for fast development
@@ -166,16 +214,37 @@ veritas-x/
 
 ---
 
-## Next Steps (Future Phases)
-- Backend integration with real authentication API
-- Enhanced security with JWT tokens
-- Email verification system
-- Password reset functionality
-- User profile management
-- Advanced dashboard features
+## Next Steps (Future Phases) - Supabase Integration Plan
+
+**Phase 3 - Supabase Backend Integration:**
+- Supabase project setup and configuration
+- Replace mock authentication with Supabase Auth
+- Real Google and GitHub OAuth provider integration
+- Database schema design for user profiles and sessions
+- Row Level Security (RLS) policies implementation
+
+**Phase 4 - Enhanced Authentication Features:**
+- Email verification system using Supabase Auth
+- Password reset functionality with Supabase
+- User profile management with database persistence
+- Real-time session management and security
+- JWT token handling with Supabase client
+
+**Phase 5 - Advanced Features & Production:**
+- User profile editing with database updates
+- File upload capabilities (avatars) with Supabase Storage
+- Real-time features with Supabase Realtime
+- Advanced dashboard features and user analytics
+- Rate limiting and security hardening
+
+**Phase 6 - Production Optimization:**
+- Environment-specific configurations (dev/staging/prod)
+- Comprehensive error logging and monitoring
+- SEO optimization and meta tags
 - Mobile responsiveness improvements
-- SEO optimization
+- Performance optimization and caching strategies
 
 ---
 
-*Project completed in two phases: Design Implementation (Phase 1) and Authentication System (Phase 2)*
+*Project completed: Design Implementation (Phase 1), Authentication System (Phase 2), and Social Media OAuth (Phase 2.5)*
+*Next: Supabase Backend Integration (Phase 3)*

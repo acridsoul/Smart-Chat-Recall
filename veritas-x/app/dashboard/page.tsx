@@ -12,12 +12,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push('/login');
+      router.push('/auth/login');
     }
   }, [isAuthenticated, isLoading, router]);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     router.push('/');
   };
 
@@ -90,9 +90,9 @@ export default function DashboardPage() {
             <div className="flex justify-between items-center py-3 border-b border-gray-700">
               <span className="font-roboto text-gray-400">Name:</span>
               <div className="flex items-center space-x-3">
-                {user.avatar && (
+                {user.avatar_url && (
                   <img 
-                    src={user.avatar} 
+                    src={user.avatar_url} 
                     alt="Avatar" 
                     className="w-6 h-6 rounded-full"
                   />
@@ -145,7 +145,7 @@ export default function DashboardPage() {
             <div className="flex justify-between items-center py-3 border-b border-gray-700">
               <span className="font-roboto text-gray-400">Member since:</span>
               <span className="font-roboto text-white">
-                {new Date(user.createdAt).toLocaleDateString('en-US', {
+                {new Date(user.created_at).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric'

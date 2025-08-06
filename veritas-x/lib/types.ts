@@ -1,10 +1,11 @@
 export interface User {
   id: string;
-  name: string;
+  name: string | null;
   email: string;
-  createdAt: string;
+  avatar_url?: string | null;
   provider?: 'email' | 'google' | 'github';
-  avatar?: string;
+  created_at: string;
+  updated_at?: string;
 }
 
 export interface AuthState {
